@@ -1,8 +1,36 @@
-# Media Stacks
-This repository contains Docker Compose configurations for various media-related services. Each service or service collection is defined in its own directory
+# Docker Stacks
+This repository contains Docker Compose configurations for various media-related services and other utilities. Each service or service collection is defined in its own directory.
 
-## Base directory structure
-Assuming the base directory is named `mediastack`, the structure with current configs is as follows:
+### Brief media config overview
+Basic configuration for media server should include at least one media center (Jellyfin -my current preferred option-, Kodi Headless, or Plex), one download manager (qBittorrent), the tracker proxy (Jackett), and one ARR service (Sonarr for TV shows, Radarr for movies, or both). Additional services can be added based on user needs, but the subtitle server (Bazarr) is recommended.
+
+#### Starting the ARR stack
+To start a basic media stack with Jellyfin, qBittorrent, Jackett, Sonarr, Radarr, and Bazarr, navigate to the `stacks/arr` directory and run the following command:
+
+```bash
+docker-compose up -d
+```
+
+Note they'll try to configure the volumes and networks as defined in the `docker-compose.yml` file which by default point to `/mediastack/config` and `/mediastack/library` respectively. Make sure these paths exist and have the appropriate permissions.
+
+Once all the containers are up and running, you can access the services via your web browser using the following URLs:
+- Jellyfin: `http://<your-server-ip>:8096`
+- qBittorrent: `http://<your-server-ip>:8082`
+- Jackett: `http://<your-server-ip>:9117`
+- Sonarr: `http://<your-server-ip>:8989`
+- Radarr: `http://<your-server-ip>:7878`
+- Bazarr: `http://<your-server-ip>:6767`
+
+#### Configuring the ARR services
+After starting the containers, you'll need to configure each service to work together. Here are the basic steps:
+1. **Jackett**: Add your preferred torrent indexers in Jackett and copy the API key.
+2. **qBittorrent**: Set up your download directories and configure any necessary settings.
+3. **Sonarr and Radarr**: Add your media libraries, set up the download clients (qBittorrent), and configure the indexers using the Jackett API key.
+4. **Bazarr**: Connect Bazarr to Sonarr and Radarr to manage subtitles for your media library.
+
+
+## Default directory structure
+Assuming the base directory is named `/mediastack`, the structure with current configs is as follows:
 
 ```
 /mediastack
@@ -64,3 +92,8 @@ Assuming the base directory is named `mediastack`, the structure with current co
 - **[Homepage](./homepage/)**: A simple and customizable homepage/dashboard for your web browser, providing quick access to your favorite websites and services.
 - **[Frigate](./frigate/)**: An open-source NVR (Network Video Recorder) solution that integrates with Home Assistant, providing real-time object detection and recording capabilities for your security cameras.
 - **[Caddy](./caddy/)**: A powerful, enterprise-ready, open-source web server with automatic HTTPS written in Go. It is designed to be easy to use and configure, making it a popular choice for hosting websites and web applications.
+
+## VPN
+By default, no VPN is configured for any of the stacks. However, it is recommended to use a VPN for services that handle downloads or media streaming to enhance privacy and security. 
+
+There's an initial protonvpn configuration available in the `arr` stack file.
