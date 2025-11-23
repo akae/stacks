@@ -1,0 +1,20 @@
+# Kodi Headless docker-compose.yaml
+# Kodi Headless is a lightweight version of Kodi media center designed to run without a graphical user interface.
+services:
+  kodi-headless:
+    image: linuxserver/kodi-headless:latest
+    container_name: kodi-headless
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Madrid
+    volumes:
+      - /mediastack/config/kodi:/config/.kodi
+      - /mediastack/library/movies:/media/movies
+      - /mediastack/library/tvshows:/media/tvshows
+      - /mediastack/library/music:/media/music
+    ports:
+      - 8080:8080
+      - 9090:9090
+      - 9777:9777/udp
+    restart: unless-stopped

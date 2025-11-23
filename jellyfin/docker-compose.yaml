@@ -1,0 +1,48 @@
+# Jellyfin docker-compose.yaml
+# Jellyfin is a free software media system that puts you in control of managing and streaming your media.
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    user: 1000:1000
+    group_add:
+      # Optional - add container user to additional groups for device access
+      # Get group IDs from linux host with: getent group <groupname>
+      - "105"           # Add container user to render group
+      - "44"            # Add container user to video group
+      - "102"           # Add container user to input group
+    network_mode: 'host'
+    volumes:
+      - /mediastack/config/jellyfin:/config
+      - /mediastack/config/jellyfin/cache:/cache
+#      - /dev/shm:/data/transcode
+      - type: bind
+        source: /mediastack/library/movies
+        target: /media/movies
+      - type: bind
+        source: /mediastack/library/tvshows
+        target: /media/tvshows
+      - type: bind
+        source: /mediastack/library/music
+        target: /media/music
+      # - type: bind
+      #   source: /path/to/media2
+      #   target: /media2
+      #   read_only: true
+      # Optional - extra fonts to be used during transcoding with subtitle burn-in
+      # - type: bind
+      #   source: /path/to/fonts
+      #   target: /usr/local/share/fonts/custom
+      #   read_only: true
+    devices:
+#      - /dev/dri:/dev/dri
+#      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    restart: 'unless-stopped'
+    # Optional - alternative address used for autodiscovery
+    environment:
+      - JELLYFIN_PublishedServerUrl=${JELLYFIN_URL}
+#      - LIBVA_DRIVER_NAME=iHD
+    # Optional - may be necessary for docker healthcheck to pass if running in host network mode
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'

@@ -1,0 +1,14 @@
+# Portainer docker-compose.yaml
+# Portainer is a lightweight management UI which allows you to easily manage your Docker environments.
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /mediastack/config/portainer_data:/data
+
