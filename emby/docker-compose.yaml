@@ -1,0 +1,22 @@
+# Emby Server is a media server designed to organize, play, and stream audio and video to a variety of devices.
+services:
+  emby:
+    image: emby/embyserver
+    container_name: embyserver
+    # runtime: nvidia # Expose NVIDIA GPUs
+    # network_mode: host # Enable DLNA and Wake-on-Lan
+    environment:
+      - UID=1000 # The UID to run emby as (default: 2)
+      - GID=100 # The GID to run emby as (default 2)
+      - GIDLIST=100,44,105 # A comma-separated list of additional GIDs to run emby as (default: 2)
+    volumes:
+      - /mediastack/config/emby:/config
+      - /mediastack/library/tvshows:/mnt/tvshows
+      - /mediastack/library/movies:/mnt/movies
+    ports:
+      - 8096:8096 # HTTP port
+      - 8920:8920 # HTTPS port
+    devices:
+      - /dev/dri:/dev/dri # VAAPI/NVDEC/NVENC render nodes
+      # - /dev/vchiq:/dev/vchiq # MMAL/OMX on Raspberry Pi
+    restart: on-failure

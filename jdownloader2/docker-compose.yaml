@@ -1,0 +1,13 @@
+# Jdownloader-2 docker-compose.yaml
+# JDownloader 2 is a free, open-source download management tool with a large community of
+# developers that makes downloading as easy and fast as it should be
+services:
+  jdownloader-2:
+    image: jlesage/jdownloader-2
+    container_name: jdownloader-2
+    ports:
+      - "5800:5800"
+    volumes:
+      - /mediastack/config/jdownloader-2:/config:rw
+      - /mediastack/library/downloads:/output:rw
+    restart: unless-stopped

@@ -1,0 +1,185 @@
+# RR stack, including qBittorrent, aMule, Jackett, Radarr, Sonarr, Bazarr, and FlareSolverr.
+
+services:
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:14.3.9
+    restart: 'unless-stopped'
+    container_name: 'qbittorrent'
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Vienna
+      - WEBUI_PORT=8082
+    volumes:
+      - /mediastack/config/qbittorrent:/config
+      - /mediastack/library/downloads:/downloads
+    ports:
+      - 8082:8082 # HTTP-alt qbittorrent
+    networks:
+      - mediastack_net
+
+  amule:
+    image: ngosang/amule
+    container_name: amule
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+      - GUI_PWD=admin
+      - WEBUI_PWD=${WEBUI_PWD}
+      - MOD_AUTO_RESTART_ENABLED=true
+      - MOD_AUTO_RESTART_CRON=0 6 * * *
+      - MOD_AUTO_SHARE_ENABLED=false
+      - MOD_AUTO_SHARE_DIRECTORIES=/incoming;/my_movies
+      - MOD_FIX_KAD_GRAPH_ENABLED=true
+      - MOD_FIX_KAD_BOOTSTRAP_ENABLED=true
+    ports:
+      - "4711:4711" # web ui
+      - "4712:4712" # remote gui, webserver, cmd ...
+      - "4662:4662" # ed2k tcp
+      - "4665:4665/udp" # ed2k global search udp (tcp port +3)
+      - "4672:4672/udp" # ed2k udp
+    volumes:
+      - /mediastack/config/amule:/home/amule/.aMule
+      - /mediastack/library/downloads:/incoming
+      - /mediastack/library/downloads/tmp:/temp
+    restart: unless-stopped
+
+  jackett:
+    image: 'linuxserver/jackett'
+    restart: 'unless-stopped'
+    container_name: 'jackett'
+    volumes: 
+      - /mediastack/config/jackett:/config
+      - /mediastack/library/downloads:/downloads
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Vienna
+    ports:
+      - 9117:9117 # Jackett - proxy for torrent search
+    networks:
+      - mediastack_net
+
+  bazarr:
+    image: 'linuxserver/bazarr'
+    restart: 'unless-stopped'
+    container_name: 'bazarr'
+    depends_on:
+      - jackett
+      - qbittorrent
+    volumes:
+      - /mediastack/config/bazarr:/config
+      - /mediastack/library/movies:/data/movies
+      - /mediastack/library/tvshows:/data/tvshows
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Vienna
+    ports:
+      - 6767:6767 # Bazarr - subtitles
+    networks:
+      - mediastack_net
+
+  radarr:
+    image: 'linuxserver/radarr'
+    restart: 'unless-stopped'
+    container_name: 'radarr'
+    depends_on:
+      - jackett
+      - qbittorrent
+    volumes:
+      - /mediastack/config/radarr:/config
+      - /mediastack/library/movies:/data/movies
+      - /mediastack/library/downloads:/downloads
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Vienna
+    ports:
+      - 7878:7878 # Radarr - movies
+    networks:
+      - mediastack_net
+
+  sonarr:
+    image: 'linuxserver/sonarr'
+    restart: 'unless-stopped'
+    container_name: 'sonarr'
+    depends_on:
+      - jackett
+      - qbittorrent
+    volumes:
+      - /mediastack/config/sonarr:/config
+      - /mediastack/library/tvshows:/data/tvshows
+      - /mediastack/library/downloads:/downloads
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Vienna
+    ports:
+      - 8989:8989 # Sonarr - TV shows
+    networks:
+      - mediastack_net
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=Europe/London
+    ports:
+      - 8191:8191 # flaresolverr web interface
+    restart: unless-stopped
+    networks:
+      - mediastack_net
+
+  #   vpn:
+#     container_name: 'vpn'
+#     image: protonvpn
+#     restart: unless-stopped
+#     environment:
+#       - OPENVPN_USER_PASS_FILE=/run/secrets/protonvpn
+#       - LOGICALS_FILE=/run/secrets/logicals 
+#       - VPN_RECONNECT=2:00
+#       - VPN_SERVER_COUNT=10
+#       - LOCAL_NETWORK=192.168.3.0/24 # needed¿
+#       - PROTON_TIER=0 # 0 = Free, 1 = Basic, 2 = Plus, 3 = Visionary
+#       - DEBUG=true
+#     ports:
+#       # - 8118:8118 # Privoxy Port (Disabled)
+#       - 8080:8080 # HTTP-alt qbittorrent
+#       - 9117:9117 # Jackett - proxy for torrent search
+#       - 6767:6767 # Bazarr - subtitles
+#       # - 8686:8686 # Lidarr - music (Disabled)
+#       - 7878:7878 # Radarr - movies
+#       - 8989:8989 # Sonarr - TV shows
+#       # - 8191:8191 # byparr - cloudflare bypass
+#       # - 12312:12312 # pproxy - cloudflare bypass
+#     volumes:
+#       - /etc/localtime:/etc/localtime:ro
+#     devices:
+#       - /dev/net/tun
+#     cap_add:
+#       - NET_ADMIN
+#     secrets:
+#       - protonvpn
+#       - logicals
+#   # privoxy:
+#   #   image: vimagick/privoxy
+#   #   restart: unless-stopped
+#   #   network_mode: service:protonvpn
+#   #   depends_on:
+#   #     protonvpn:
+#   #       condition: service_healthy
+
+secrets:
+  protonvpn:
+    file: /mediastack/config/vpn/protonvpn.auth
+  logicals:
+    file: /mediastack/config/vpn/logicals
+
+networks:
+  mediastack_net:
+    driver: bridge

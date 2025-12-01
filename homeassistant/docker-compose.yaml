@@ -1,0 +1,14 @@
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    privileged: true
+    restart: always
+    environment:
+      - TZ=Europe/Madrid
+    # ports:
+    #   - 9123:9123 
+    volumes:
+      - /mediastack/config/home-assistant/config:/config
+      - /run/dbus:/run/dbus:ro
+    network_mode: host

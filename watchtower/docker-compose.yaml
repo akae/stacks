@@ -1,0 +1,10 @@
+# Watchtower is a tool that automatically updates running Docker containers whenever a new image is available.
+# Add the container name of the service you want to automatically update in the command section.
+services:
+  watchtower:
+    image: 'containrrr/watchtower'
+    restart: 'unless-stopped'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/localtime:/etc/localtime:ro
+    command: --cleanup --schedule "0 0 * * * *" --rolling-restart sonarr radarr jackett bazarr 

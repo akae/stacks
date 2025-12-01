@@ -1,0 +1,39 @@
+# Plex and Tautulli docker-compose.yaml
+# Plex is a media server that organizes video, music, and photos from personal media libraries and
+# streams them to smart TVs, streaming boxes and mobile devices.
+# Tautulli is a 3rd party application that you can run alongside your Plex Media Server to monitor,
+# analyze and provide statistics about your Plex server usage.
+services:
+  tautulli:
+    image: ghcr.io/linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/London
+    volumes:
+      - /mediastack/config/tautulli:/config
+    ports:
+      - 8181:8181
+    restart: unless-stopped
+  plex:
+    image: ghcr.io/linuxserver/plex:latest
+    container_name: plex
+    deploy:
+      resources:
+        limits:
+          memory: 15775M
+        reservations:
+          memory: "268435456"
+    devices:
+      - /dev/dri:/dev/dri
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - VERSION=docker
+    volumes:
+      - /mediastack/config/plex:/config
+      - /mediastack/library:/media_library
+    ports:
+      - 32400:32400
+    restart: unless-stopped

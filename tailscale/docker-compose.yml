@@ -1,0 +1,24 @@
+# Tailscale docker-compose.yml
+# Tailscale is a zero-config VPN that makes it easy to connect your devices securely.
+services:
+  tailscale:
+    image: tailscale/tailscale:latest
+    container_name: tailscale
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    env_file:
+     - ./.env
+    environment:
+      - TS_AUTHKEY=${TS_AUTHKEY}
+      - TS_EXTRA_ARGS=--advertise-routes=${TS_ADVERTISE_ROUTES}
+      - TS_STATE_DIR=/var/lib/tailscale
+      - TS_HOSTNAME=${TAILSCALE_HOSTNAME}
+      - TS_ACCEPT_DNS=true
+      - TS_AUTH_ONCE=true
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - /mediastack/config/tailscale:/var/lib/tailscale
+    restart: unless-stopped
