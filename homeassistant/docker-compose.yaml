@@ -12,3 +12,15 @@ services:
       - /mediastack/config/home-assistant/config:/config
       - /run/dbus:/run/dbus:ro
     network_mode: host
+
+  # SAI salicru https://blog.crstian.me/post/2022-08-05-integrar-sai-salicru-sps-500-one-en-home-assistant-con-docker/
+  nut-upsd:
+    container_name: nut-upsd
+    image: upshift/nut-upsd
+    restart: unless-stopped
+    environment:
+      - UPS_DRIVER=nutdrv_qx # SPS ONE - https://networkupstools.org/stable-hcl.html
+    ports:
+      - '3493:3493'
+    devices:
+      - /dev/bus/usb/001/009 # Cambiar según el dispositivo conectado. Ver con 'lsusb'
